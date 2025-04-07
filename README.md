@@ -17,10 +17,6 @@ The compiled binary will be called:
 
     mysh
 
-## Permissions
-
-No special permissions are required to run this shell.
-
 ## Disclaimer
 
 This project is for educational purposes only. It should not be used as a replacement for a real shell in a production environment.
