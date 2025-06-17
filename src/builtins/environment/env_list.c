@@ -77,24 +77,18 @@ int delete_node(env_t **head, const char *name)
     return 84;
 }
 
-/*
- ** this does the exact same thing as delete_node except
- it only takes the core struct as input
-*/
-int unsetenv_direct(core_t *core, char **argv)
+static int unsetenv_direct_helper(core_t *core, char **argv, int i)
 {
     env_t *current = core->head;
     env_t *old = NULL;
 
-    if (!core->head)
-        return 84;
-    if (my_strcmp(current->name, argv[1]) == 0) {
+    if (my_strcmp(current->name, argv[i]) == 0) {
         core->head = current->next;
         delete_helper(current);
         return 0;
     }
     while (current) {
-        if (my_strcmp(current->name, argv[1]) == 0) {
+        if (my_strcmp(current->name, argv[i]) == 0) {
             old->next = current->next;
             delete_helper(current);
             return 0;
@@ -103,6 +97,27 @@ int unsetenv_direct(core_t *core, char **argv)
         current = current->next;
     }
     return 84;
+}
+
+/*
+ ** this does the exact same thing as delete_node except its
+ meant to be used directly by the user
+*/
+int unsetenv_direct(core_t *core, argv_t *argv_struct, int input, int output)
+{
+    int argc = argc_counter(argv_struct->argv);
+    int return_value = 0;
+
+    if (!core->head)
+        return 84;
+    if (!argv_struct->argv[1]) {
+        my_putstr_fd("unsetenv: Too few arguments.\n", output);
+        return 84;
+    }
+    for (int i = 1; i < argc; i++) {
+        return_value = unsetenv_direct_helper(core, argv_struct->argv, i);
+    }
+    return return_value;
 }
 
 /*

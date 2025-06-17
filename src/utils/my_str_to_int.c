@@ -15,15 +15,15 @@ int my_str_to_int(const char *str)
     int result = 0;
     int sign = 1;
 
-    while ((*str == ' ' || *str == '\t')) {
+    if (!str)
+        return 0;
+    while ((*str == ' ' || *str == '\t'))
         str++;
-    }
     if (*str == '-') {
         sign = -1;
         str++;
-    } else if (*str == '+') {
+    } else if (*str == '+')
         str++;
-    }
     while (*str) {
         if (!my_is_digit(*str))
             return (result * sign);

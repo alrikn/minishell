@@ -6,6 +6,7 @@
 */
 
 #include <time.h>
+
 char *my_move_to_char(const char *str, int c)
 {
     if (!str)

@@ -16,6 +16,11 @@ char **get_list_of_paths(core_t *core)
     char **list_path = my_str_to_word_array_specific(paths, ':');
 
     free(paths);
+    if (!list_path) {
+        list_path = malloc(sizeof(char *) * 2);
+        list_path[0] = my_strdup("/usr/bin/");
+        list_path[1] = NULL;
+    }
     return list_path;
 }
 
@@ -51,6 +56,7 @@ static char *path_loop(char *full_path, char *b_name, char **list_path, int i)
 /*
  ** this function will return the path by searching through
  current directory and the env PATH
+ ** if there is no path variable in env we defalut to "/usr/bin/"
  **if ther is '/' i assume you know what you are doing
  and don't touch the env path
 */

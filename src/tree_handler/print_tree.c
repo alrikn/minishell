@@ -7,17 +7,19 @@
 
 #include "my.h"
 #include "struct.h"
+#include <stdio.h>
 
 static void print_type(tree_t *node)
 {
     int i = 0;
 
-    while (MY_OPERATORS[i].symbol && node->type != MY_OPERATORS[i].type)
+    while (OPERATOR_PRINT[i].symbol && node->type != OPERATOR_PRINT[i].type)
         i++;
-    if (MY_OPERATORS[i].symbol) {
+    if (OPERATOR_PRINT[i].symbol) {
         my_cooler_putstr(" node type is ");
-        my_cooler_putstr(MY_OPERATORS[i].symbol);
+        my_cooler_putstr(OPERATOR_PRINT[i].symbol);
         my_cooler_putstr("\n");
+        fflush(stdout);
     }
 }
 
@@ -28,14 +30,18 @@ int recursive_print(tree_t *node)
     if (!node)
         return 84;
     print_type(node);
-    if (node->argv)
-        print_array(node->argv);
+    if (node->argv_struct && node->argv_struct->argv) {
+        print_array(node->argv_struct->argv);
+        my_cooler_putstr("\n");
+    }
     if (node->left) {
         next = node->left;
+        my_cooler_putstr("left: ");
         recursive_print(next);
     }
     if (node->right) {
         next = node->right;
+        my_cooler_putstr("right: ");
         recursive_print(next);
     }
     return 0;

@@ -6,6 +6,11 @@
 */
 
 #include "my.h"
+#include "struct.h"
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 /*
  ** if execve fails, smth has gone very wrong and we complain about it
@@ -22,6 +27,9 @@ static void fork_child(core_t *core, int input_fd, int output_fd)
         dup2(output_fd, STDOUT_FILENO);
         close(output_fd);
     }
+    if (core->job.is_background) {
+        setpgid(getpid(), getpid());
+    }
     execve(core->sub_input.path, core->sub_input.command, core->sub_input.env);
     my_cooler_putstr(core->sub_input.path);
     my_cooler_putstr(": Exec format error. Binary file not executable.\n");
@@ -29,11 +37,25 @@ static void fork_child(core_t *core, int input_fd, int output_fd)
     exit(84);
 }
 
-static void fault(int status)
+static void fault(int status, core_t *core)
 {
     if (WIFSIGNALED(status) == true) {
         my_cooler_putstr(strsignal(WTERMSIG(status)));
         my_cooler_putstr(" (core dumped)\n");
+        core->exit.last_value = status;
+    }
+}
+
+static void handle_parent(core_t *core, pid_t p, int *signal_value)
+{
+    if (!core->job.is_background) {
+        waitpid(p, signal_value, 0);
+        core->exit.last_value = WEXITSTATUS(*signal_value);
+    } else {
+        add_to_job_stack(&core->job.job_head, p,
+            array_to_str(core->sub_input.command));
+        printf("[%d] %d\n", core->job.job_head->job_nbr,
+            core->job.job_head->current_job);
     }
 }
 
@@ -49,15 +71,14 @@ static int execve_handler(core_t *core, int input_fd, int output_fd)
     if (p == 0)
         fork_child(core, input_fd, output_fd);
     else if (p > 0) {
-        waitpid(p, &signal_value, 0);
-        core->exit.last_value = WEXITSTATUS(signal_value);
+        handle_parent(core, p, &signal_value);
     }
     if (input_fd != STDIN_FILENO)
         close(input_fd);
     if (output_fd != STDOUT_FILENO)
         close(output_fd);
     if (signal_value != 0)
-        fault(signal_value);
+        fault(signal_value, core);
     return 0;
 }
 

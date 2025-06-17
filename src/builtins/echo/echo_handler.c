@@ -18,26 +18,27 @@ int last_return_value(core_t *core)
     return 0;
 }
 
-int write_normal_echo(core_t *core, char **argv)
+int write_normal_echo(core_t *core, char **argv, int output)
 {
     int i = 0;
 
     while (argv[i + 1]) {
-        my_cooler_putstr(argv[i + 1]);
+        my_putstr_fd(argv[i + 1], output);
         i++;
         if (argv[i + 1]) {
-            my_cooler_putstr(" ");
+            my_putstr_fd(" ", output);
         }
     }
-    my_cooler_putstr("\n");
+    my_putstr_fd("\n", output);
     return 0;
 }
 
-int echo_handler(core_t *core, char **argv)
+int echo_handler(core_t *core, argv_t *argv_struct,
+    int input_fd, int output_fd)
 {
-    int argc = argc_counter(argv);
+    int argc = argc_counter(argv_struct->argv);
 
-    if (argc == 2 && my_strcmp(argv[1], "$?") == 0)
+    if (argc == 2 && my_strcmp(argv_struct->argv[1], "$?") == 0)
         return last_return_value(core);
-    return write_normal_echo(core, argv);
+    return write_normal_echo(core, argv_struct->argv, output_fd);
 }

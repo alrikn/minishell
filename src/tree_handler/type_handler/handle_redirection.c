@@ -41,9 +41,9 @@ int handle_redirection(core_t *core, tree_t *node, int in_fd, int out_fd)
         my_cooler_putstr("Missing name for redirect.\n");
         return -84;
     }
-    if (!node->right->argv || node->left->type == OP_LSHIFT ||
-    node->left->type == OP_RSHIFT || node->left->type == OP_RAPPEND ||
-    node->left->type == OP_LAPPEND) {
+    if (!node->right->argv_struct || !node->right->argv_struct->argv ||
+    node->left->type == OP_LSHIFT || node->left->type == OP_RSHIFT ||
+    node->left->type == OP_RAPPEND || node->left->type == OP_LAPPEND) {
         my_cooler_putstr("Ambiguous output redirect.\n");
         return -84;
     }

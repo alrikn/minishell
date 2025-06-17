@@ -19,7 +19,7 @@ void here_document_loop(int *pipefd, tree_t *node)
     long read_len = 0;
     char *line = NULL;
     size_t len = 0;
-    char *delimiter = node->right->argv[0];
+    char *delimiter = node->right->argv_struct->argv[0];
 
     while (true) {
         my_cooler_putstr("? ");

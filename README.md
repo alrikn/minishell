@@ -1,9 +1,9 @@
 # minishell
-a tcsh-like shell, complete with redirections and pipes, hierarchy of execution, and environment handling.
+a tcsh-like shell, complete with redirections and pipes, hierarchy of execution, and environment handling. It also handles history, in-line edits, and quotes.
 
-It supports:
+It supports these redirectors:
 
-    <  <<  >  >>  |  ;
+    <  <<  >  >>  |  ; () && ||
 
 ## Build
 
@@ -15,7 +15,7 @@ To compile the binary:
 
 The compiled binary will be called:
 
-    mysh
+    42sh
 
 ## Disclaimer
 

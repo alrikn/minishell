@@ -8,11 +8,15 @@
 #include "my.h"
 #include <fcntl.h>
 
+/*
+** rights at end of file without destroying the previous text
+*/
 int right_append(core_t *core, tree_t *node, int input, int output)
 {
     int file_fd = -1;
 
-    file_fd = open(node->right->argv[0], O_CREAT | O_WRONLY | O_APPEND, 0664);
+    file_fd = open(node->right->argv_struct->argv[0], O_CREAT |
+    O_WRONLY | O_APPEND, 0664);
     if (file_fd < 0)
         return -84;
     execute_node(core, node->left, input, file_fd);

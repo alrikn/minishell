@@ -4,6 +4,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo ''
+  echo "exit 0"
 [901-END]
 
 [902]
@@ -13,6 +14,7 @@ CLEAN=""
 TESTS=
   echo 'ls /etc'
   echo 'cat /etc/resolv.conf'
+  echo "exit 0"
 [902-END]
 
 [903]
@@ -21,6 +23,7 @@ SETUP="export TERM=xterm ; PATH='/usr/bin'"
 CLEAN=""
 TESTS=
   echo 'pwd'
+  echo "exit 0"
 [903-END]
 
 [904]
@@ -29,6 +32,7 @@ SETUP="export TERM=xterm ; PATH='/bin'"
 CLEAN=""
 TESTS=
   echo 'pwd'
+  echo "exit 0"
 [904-END]
 
 [905]
@@ -41,6 +45,7 @@ TESTS=
   echo 'ls -l /etc'
   sleep 0.5
   echo 'pwd'
+  echo "exit 0"
 [905-END]
 
 [906]
@@ -49,6 +54,7 @@ SETUP="/usr/bin/env > .lstenv ; while read varenv ; do unset $varenv ; done < <(
 CLEAN="while read varenv ; do export "$varenv" 2>/dev/null ; done  < <(/bin/cat .lstenv) ; /bin/rm -f .lstenv"
 TESTS=
   echo 'unsetenv HOSTTYPE'
+  echo 'unsetenv NLSPATH'
   echo 'unsetenv VENDOR'
   echo 'unsetenv OSTYPE'
   echo 'unsetenv MACHTYPE'
@@ -68,6 +74,7 @@ TESTS=
   echo '/usr/bin/env'
   echo 'setenv var1 val1'
   echo 'setenv var2 val2'
+  echo "exit 0"
 [906-END]
 
 [907]
@@ -79,6 +86,7 @@ TESTS=
   echo 'ls -l'
   echo 'cd /usr'
   echo 'ls -l'
+  echo "exit 0"
 [907-END]
 
 [908]
@@ -87,6 +95,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo -e "\t\t    ls\t     \t-l    \t\t  \t -a /usr   \t\t"
+  echo "exit 0"
 [908-END]
 
 [909]
@@ -95,6 +104,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "./my_divzero"
+  echo "exit 0"
 [909-END]
 
 [910]
@@ -103,6 +113,7 @@ SETUP="ulimit -c 0 ; export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "./my_segfault"
+  echo "exit 0"
 [910-END]
 
 [911]
@@ -111,6 +122,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "ls -l /etc | grep sh"
+  echo "exit 0"
 [911-END]
 
 [912]
@@ -131,6 +143,7 @@ CLEAN=""
 TESTS=
   echo " ; ls -l /etc"
   echo "ls ;"
+  echo "exit 0"
 [913-END]
 
 [914]
@@ -139,6 +152,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "cd ; ls -lR | grep root"
+  echo "exit 0"
 [914-END]
 
 [915]
@@ -147,6 +161,7 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "ls -l > text1.txt > text2.txt"
+  echo "exit 0"
 [915-END]
 
 [916]
@@ -155,13 +170,323 @@ SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "ls -l > text1.txt | grep mar"
+  echo "exit 0"
 [916-END]
 
-[916]
+[917]
 NAME="Testing wrong pipe"
 SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
 CLEAN=""
 TESTS=
   echo "| grep mar"
   echo "grep mar |"
-[916-END]
+  echo "exit 0"
+[917-END]
+
+[918]
+NAME="Testing parenthes"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls ; (cd ; ls -lR) | grep root"
+  echo "exit 0"
+[918-END]
+
+[919]
+NAME="Testing bad parenthes"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls ; (cd ; ls -lR))"
+  echo "exit 0"
+[919-END]
+
+[920]
+NAME="Nested parentheses"
+SETUP="mkdir -p test_dir ; touch test_dir/file"
+CLEAN="rm -rf test_dir"
+TESTS=
+echo "( (echo 'Inner') ; (echo 'Outer') )"
+echo "(cd test_dir && (ls file))"
+echo "exit 0"
+[920-END]
+
+[921]
+NAME="Subshell environment isolation"
+SETUP="export VAR=outer"
+CLEAN="unset VAR"
+TESTS=
+echo "(VAR=inner; echo $VAR) ; echo $VAR"
+echo "(cd /tmp; pwd) ; pwd"
+echo "exit 0"
+[921-END]
+
+[922]
+NAME="Parentheses with control operators"
+SETUP=""
+CLEAN=""
+TESTS=
+echo "(echo A || echo B) && echo C"
+echo "exit 0"
+[922-END]
+
+[923]
+NAME="Complex mixed operators"
+SETUP=""
+CLEAN=""
+TESTS=
+echo "ls | (grep 'txt' ; grep 'md') | wc -l"
+echo "exit 0"
+[923-END]
+
+[924]
+NAME="Error scenarios"
+SETUP=""
+CLEAN=""
+TESTS=
+echo "(()"
+echo ")("
+echo "(echo 1; echo 2"
+echo "exit 0"
+[924-END]
+
+[925]
+NAME="testing normal history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls"
+  echo "!ls"
+  echo "exit 0"
+[925-END]
+
+[926]
+NAME="Testing homeless history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin' ; HOME=''"
+CLEAN=""
+TESTS=
+  echo "ls"
+  echo "!ls"
+  echo "exit 0"
+[926-END]
+
+[927]
+NAME="Testing big history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls ; (cd ; ls -lR) | grep root"
+  echo "!ls"
+  echo "exit 0"
+[927-END]
+
+[928]
+NAME="bad history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "!wu66a"
+  echo "exit 0"
+[928-END]
+
+[929]
+NAME="Testing muliple bad history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "!luba !dubdub"
+  echo "exit 0"
+[929-END]
+
+[930]
+NAME="Testing muliple bad history mixed with good history"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls"
+  echo "!luba !dubdub !ls"
+  echo "exit 0"
+[930-END]
+
+[931]
+NAME="Testing basic alias"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias ll \"ls -l\""
+  echo "ll"
+  echo "exit 0"
+[931-END]
+
+[932]
+NAME="Testing alias without quotes"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias ll ls -l"
+  echo "ll"
+  echo "exit 0"
+[932-END]
+
+[933]
+NAME="Testing bas alias"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias sedrf \"zsxdcf\""
+  echo "sedrf"
+  echo "exit 0"
+[933-END]
+
+[934]
+NAME="Testing alias display"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias lla \"ls -la\""
+  echo "alias ll \"ls -l\""
+  echo "alias llR \"ls -laR\""
+  echo "alias"
+  echo "exit 0"
+[934-END]
+
+[935]
+NAME="Testing unalias basic"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias lla \"ls -la\""
+  echo "alias ll \"ls -l\""
+  echo "alias llR \"ls -laR\""
+  echo "unalias lla"
+  echo "alias"
+  echo "exit 0"
+[935-END]
+
+[936]
+NAME="Testing bad unalias name"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias lla \"ls -la\""
+  echo "alias ll \"ls -l\""
+  echo "alias llR \"ls -laR\""
+  echo "unalias steve"
+  echo "alias"
+  echo "exit 0"
+[936-END]
+
+[937]
+NAME="Testing bad unalias num of arguments"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias lla \"ls -la\""
+  echo "alias ll \"ls -l\""
+  echo "alias llR \"ls -laR\""
+  echo "unalias llr quigon"
+  echo "alias"
+  echo "exit 0"
+[937-END]
+
+[937]
+NAME="Testing bad unalias unsufficent arguments"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias lla \"ls -la\""
+  echo "alias ll \"ls -l\""
+  echo "alias llR \"ls -laR\""
+  echo "unalias"
+  echo "alias"
+  echo "exit 0"
+[937-END]
+
+[938]
+NAME="Testing alias inside alias"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "alias ll \"ls -l\""
+  echo "alias lla \"ll -a\""
+  echo "alias"
+  echo "lla"
+  echo "unalias ll"
+  echo "lla"
+  echo "exit 0"
+[938-END]
+
+[939]
+NAME="Testing ||"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls || cat ls"
+  echo "cat ls || ls"
+  echo "exit 0"
+[939-END]
+
+[940]
+NAME="Testing &&"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls && ls"
+  echo "ls || cat ls"
+  echo "exit 0"
+[940-END]
+
+[941]
+NAME="Testing ||"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls || cat ls"
+  echo "cat ls || ls"
+  echo "exit 0"
+[941-END]
+
+[942]
+NAME="Testing && and ||"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "ls && ls"
+  echo "ls || cat ls && ls joey"
+  echo "exit 0"
+[942-END]
+
+[943]
+NAME="Testing jobs"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "sleep 10 &"
+  echo "jobs"
+  echo "exit 0"
+[943-END]
+
+[944]
+NAME="Testing fg"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "sleep 10 &"
+  echo "sleep 10 &"
+  echo "jobs"
+  echo "sleep 10 &"
+  echo "fg"
+  echo "jobs"
+  echo "ls"
+  echo "exit 0"
+[944-END]
+
+[945]
+NAME="Testing fg and jobs"
+SETUP="export TERM=xterm ; PATH='/bin:/usr/bin'"
+CLEAN=""
+TESTS=
+  echo "sleep 10 & jobs"
+  echo "jobs"
+  echo "exit 0"
+[945-END]

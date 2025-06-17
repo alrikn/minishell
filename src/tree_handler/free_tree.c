@@ -7,6 +7,18 @@
 
 #include "my.h"
 
+void free_argv_t(argv_t *argv_struct)
+{
+    if (!argv_struct)
+        return;
+    if (argv_struct->argv)
+        free_array(argv_struct->argv);
+    if (argv_struct->types)
+        free(argv_struct->types);
+    free(argv_struct);
+    argv_struct = NULL;
+}
+
 int recursive_free(tree_t *node)
 {
     tree_t *next;
@@ -21,8 +33,8 @@ int recursive_free(tree_t *node)
         next = node->right;
         recursive_free(next);
     }
-    if (node->argv)
-        free_array(node->argv);
+    if (node->argv_struct)
+        free_argv_t(node->argv_struct);
     free(node);
     return 0;
 }

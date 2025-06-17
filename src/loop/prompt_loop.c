@@ -1,6 +1,6 @@
 /*
 ** EPITECH PROJECT, 2025
-** minishell1
+** 42sh
 ** File description:
 ** prompt_loop
 */
@@ -11,101 +11,67 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include "my.h"
 #include "struct.h"
 
 void free_everything(core_t *core, char *input)
 {
-    if (input)
-        free(input);
-    if (core->input.argv)
-        free_array(core->input.argv);
+    if (core->input.argv_struct)
+        free_argv_t(core->input.argv_struct);
     if (core->head)
         free_list(core->head);
+    if (core->alias_head)
+        free_alias_list(core->alias_head);
+    if (core->history.file_dp)
+        fclose(core->history.file_dp);
+    if (core->history.hist_head)
+        free_history(core->history.hist_head);
+    free_jobs(core->job.job_head);
 }
 
 /*
- ** this resetss the flags to ensure that loops do'nt interfere with each other
- ** the flag boolean is set to true if we are calling one of the builtins
- ** last_failed if the builtin that we called in the loop failed
-*/
-void flag_reset(core_t *core)
-{
-    core->com.flag = false;
-    core->exit.last_failed = false;
-}
-
-static int flag_catch(core_t *core, char **argv)
-{
-    char *list_of_builtin[] = {"env", "cd", "setenv", "unsetenv", "echo",
-    NULL};
-    int (*list_of_function[])(core_t *, char **argv) = {print_env, cd_handler,
-    setenv_direct, unsetenv_direct, echo_handler};
-    int i = 0;
-
-    while (list_of_builtin[i]) {
-        if (argv && argv[0] && my_strcmp(list_of_builtin[i], argv[0]) == 0) {
-            core->com.flag = true;
-            return list_of_function[i](core, argv);
-        }
-        i++;
-    }
-    return 0;
-}
-
-/*
- ** this checks the flags(cd, env, setenv, unsetenv, exit)
- ** exit is checked separately, because it is the only builtin
- that is not linked
- to an actual function
-*/
-int check_system_commands(core_t *core, char **argv)
-{
-    int len = my_strlen(argv[0]);
-
-    flag_reset(core);
-    if (len == 0)
-        return 1;
-    if (len == 4 &&
-    my_strncmp(argv[0], "exit", my_strlen("exit")) == 0) {
-        core->com.exit = true;
-        return 0;
-    }
-    if (flag_catch(core, argv) != 0) {
-        core->exit.last_failed = true;
-    }
-    return 0;
-}
-
-/*
- ** we make argc and argv
- ** argv is malloced so be careful
+** we make argc and argv
+** argv is malloced so be careful
 */
 static void input_maker(core_t *core, char *input)
 {
     int i = 0;
 
-    core->input.argv = my_str_to_word_array(input);
-    while (core->input.argv[i])
+    core->input.argv_struct = input_line_parser(input);
+    if (!core->input.argv_struct || !core->input.argv_struct->argv)
+        return;
+    while (core->input.argv_struct->argv[i])
         i++;
     core->input.argc = i;
 }
 
+/*
+** we take a the argv, parse it to a syntax tree,
+** verify everything is correct
+** execute the tree in order (redirections and everything)
+** and then free everything
+*/
 int handle_argv(core_t *core, char *input)
 {
     input_maker(core, input);
-    core->tree.root = tree_parser(core->input.argv);
-    execute_node(core, core->tree.root, STDIN_FILENO, STDOUT_FILENO);
-    free_tree(core->tree.root);
-    free_array(core->input.argv);
-    core->input.argv = NULL;
+    history_handle(core, core->input.argv_struct);
+    if (core->input.argv_struct && !inhibitor_error(core->input.argv_struct)
+    && argc_counter(core->input.argv_struct->argv) != 0) {
+        core->tree.root = tree_parser(core, core->input.argv_struct);
+        recursive_error_check(core, core->tree.root);
+        if (!core->tree.parse_error)
+            core->exit.last_value = execute_node(core, core->tree.root,
+        STDIN_FILENO, STDOUT_FILENO);
+        free_tree(core->tree.root);
+    }
+    free_argv_t(core->input.argv_struct);
+    core->input.argv_struct = NULL;
     core->tree.root = NULL;
     return 0;
 }
 
 /*
- to skip the spaces so that i know when i should skip the line cus no command
+** to skip the spaces so that i know when i should skip the line cus no command
 */
 static char *format_input(char *line)
 {
@@ -123,28 +89,30 @@ static char *format_input(char *line)
 }
 
 /*
- ** if this while loop breaks the program stops
- ** the rushed_exit boolean is for ctrl d, which will make the program return
- the last exit value
+** this is how we prompt the user
+** if this while loop breaks the program stops
+** the rushed_exit boolean is for ctrl d, which will make the program return
+** the last exit value
 */
 void main_loop(core_t *core)
 {
     char *input = NULL;
-    size_t len = 0;
-    ssize_t nread = 0;
     char *trimmed = NULL;
 
     while (core->com.exit == false) {
-        my_cooler_putstr("$> ");
-        nread = getline(&input, &len, stdin);
-        if (nread == -1) {
+        input = get_input();
+        if (input == NULL) {
             core->exit.rushed_exit = true;
             break;
         }
         trimmed = format_input(input);
-        if (nread == 1 || nread == 0 || trimmed[0] == '\0')
+        if (trimmed[0] == '\0') {
+            free(input);
             continue;
+        }
         handle_argv(core, input);
+        update_jobs(core, false);
+        free(input);
     }
     free_everything(core, input);
 }

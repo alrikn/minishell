@@ -87,6 +87,11 @@ char **extract_words(char const *str, char **array)
     return array;
 }
 
+/*
+** transform a str in an malloced array
+** the way this works is when it detect a space it adds word
+** example: "i like cats" -> "i" "like" "cats"
+*/
 char **my_str_to_word_array(char const *str)
 {
     int num_words = count_words(str);
